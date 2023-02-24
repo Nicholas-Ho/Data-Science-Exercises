@@ -1,29 +1,58 @@
 import numpy as np
 
-def polyreg(data_matrix, k):
-
-    def residual(X, y, beta):
+class PolynomialRegressor:
+    def residual(self, X, y, beta):
         return y - X@beta
 
-    def sse(X, y, beta):
-        res = residual(X, y, beta)
+    def sse(self, X, y, beta):
+        res = self.residual(X, y, beta)
         return res.T @ res
-    
-    k = len(data_matrix)-1 if k >= len(data_matrix) else k
 
-    x = np.swapaxes(data_matrix, 0, 1)[0]
-    y = np.swapaxes(data_matrix, 0, 1)[1]
-    
-    # Generate X
-    X = np.array(list(map(lambda xpt: [xpt**power for power in range(k+1)], x)))
+    def polyreg(self, data_matrix, k):
+        k = len(data_matrix)-1 if k >= len(data_matrix) else k
 
-    # Calculate beta
-    beta = np.linalg.inv(X.T@X)@X.T@y
+        x = np.swapaxes(data_matrix, 0, 1)[0]
+        y = np.swapaxes(data_matrix, 0, 1)[1]
+        
+        # Generate X
+        X = np.array(list(map(lambda xpt: [xpt**power for power in range(k+1)], x)))
 
-    # Get SSE_0
-    sse_0 = sse(np.reshape(x, (x.shape[0], 1)), y, np.array([np.sum(y)/len(y)]))
+        # Calculate beta
+        beta = np.linalg.inv(X.T@X)@X.T@y
 
-    return beta, (1-sse(X, y, beta)/sse_0), residual(X, y, beta)
+        # Get SSE_0
+        sse_0 = self.sse(np.reshape(x, (x.shape[0], 1)), y, np.array([np.sum(y)/len(y)]))
 
-def predict(x, beta):
-    return beta @ np.array(list(map(lambda xpt: [xpt**power for power in range(len(beta))], x))).T
+        return beta, (1-self.sse(X, y, beta)/sse_0), self.residual(X, y, beta)
+
+    def predict(self, x, beta):
+        return beta @ np.array(list(map(lambda xpt: [xpt**power for power in range(len(beta))], x))).T
+
+class DFTRegressor:
+    def residual(self, X, y, beta):
+        return y - X@beta
+
+    def sse(self, X, y, beta):
+        res = self.residual(X, y, beta)
+        return res.T @ res
+
+    def fit(self, data_matrix, freqs):
+        x = np.swapaxes(data_matrix, 0, 1)[0]
+        y = np.swapaxes(data_matrix, 0, 1)[1]
+        
+        # Generate X
+        sincos = (lambda x: np.sin(x), lambda x: np.cos(x))
+        X = np.array(list(map(lambda xpt: [f(w*2*np.pi*xpt) for w in freqs for f in sincos], x)))
+
+        # Calculate beta
+        beta = np.linalg.inv(X.T@X)@X.T@y
+
+        # Get SSE_0
+        sse_0 = self.sse(np.reshape(x, (x.shape[0], 1)), y, np.array([np.sum(y)/len(y)]))
+
+        return beta, (1-self.sse(X, y, beta)/sse_0), self.residual(X, y, beta)
+
+    def predict(self, x, beta, freqs):
+        sincos = (lambda x: np.sin(x), lambda x: np.cos(x))
+        return beta @ np.array(list(map(lambda xpt: [f(w*2*np.pi*xpt) for w in freqs for f in sincos], x))).T
+
