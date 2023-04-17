@@ -21,7 +21,8 @@ class PolynomialRegressor:
         beta = np.linalg.inv(X.T@X)@X.T@y
 
         # Get SSE_0
-        sse_0 = self.sse(np.reshape(x, (x.shape[0], 1)), y, np.array([np.sum(y)/len(y)]))
+        res_0 = y - np.mean(y)*np.ones(x.shape[0])
+        sse_0 = res_0 @ res_0
 
         return beta, (1-self.sse(X, y, beta)/sse_0), self.residual(X, y, beta)
 
@@ -48,7 +49,8 @@ class DFTRegressor:
         beta = np.linalg.inv(X.T@X)@X.T@y
 
         # Get SSE_0
-        sse_0 = self.sse(np.reshape(x, (x.shape[0], 1)), y, np.array([np.sum(y)/len(y)]))
+        res_0 = y - np.mean(y)*np.ones(x.shape[0])
+        sse_0 = res_0 @ res_0
 
         return beta, (1-self.sse(X, y, beta)/sse_0), self.residual(X, y, beta)
 
